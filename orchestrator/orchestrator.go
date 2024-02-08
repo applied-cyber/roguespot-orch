@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// The orchestrator
 type Orchestrator struct {
 	db DataStore
 }
@@ -18,29 +17,27 @@ func NewOrchestrator(db DataStore) *Orchestrator {
 
 func (o *Orchestrator) Run() {
 	router := gin.Default()
-	router.POST("/log", o.postAP)
+	router.POST("/log", o.handlePost)
 	if err := router.Run(); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 }
 
-func (o *Orchestrator) handleAP(accessPoint AP) (int, string) {
-	containsAP, err := o.db.CheckIfAPExists(accessPoint)
-	if err != nil {
-		return http.StatusInternalServerError, err.Error()
-	}
-	if containsAP {
-		return http.StatusOK, "Access point already exists in database"
-	}
-	return o.db.InsertAP(accessPoint)
-}
-
-func (o *Orchestrator) postAP(c *gin.Context) {
+func (o *Orchestrator) handlePost(c *gin.Context) {
 	var accessPoint AP
 	if err := c.BindJSON(&accessPoint); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	statusCode, responseBody := o.handleAP(accessPoint)
+	containsAP, err := o.db.CheckIfAPExists(accessPoint)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if containsAP {
+		c.JSON(http.StatusOK, gin.H{"response": "Access point already exists in database"})
+		return
+	}
+	statusCode, responseBody := o.db.InsertAP(accessPoint)
 	c.JSON(statusCode, gin.H{"response": responseBody})
 }
