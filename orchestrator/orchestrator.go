@@ -29,7 +29,9 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	containsAP, err := o.db.CheckIfAPExists(accessPoint)
+	ctx := c.Request.Context()
+
+	containsAP, err := o.db.CheckIfAPExists(ctx, accessPoint)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -38,6 +40,10 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"response": "Access point already exists in database"})
 		return
 	}
-	statusCode, responseBody := o.db.InsertAP(accessPoint)
-	c.JSON(statusCode, gin.H{"response": responseBody})
+	err = o.db.InsertAP(ctx, accessPoint)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"response": "Successfully inserted access point"})
 }
