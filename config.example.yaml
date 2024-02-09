@@ -1,0 +1,4 @@
+# The MongoDB host address. Default: localhost
+mongoHost:
+# The MongoDB port. Default: 27017
+mongoPort:

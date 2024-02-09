@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+
 	"roguespot-orch/orchestrator"
 )
 
 func main() {
 	ctx := context.Background()
-	mongoDBHandler, err := orchestrator.NewMongoDBHandler(ctx, "mongodb://localhost:27017", "roguespot-orch", "post_requests")
+	config := NewConfig()
+	mongoURL := fmt.Sprintf("mongodb://%s:%d", config.MongoHost, config.MongoPort)
+
+	mongoDBHandler, err := orchestrator.NewMongoDBHandler(ctx, mongoURL, "roguespot-orch", "post_requests")
 	if err != nil {
 		log.Fatalf("Failed to initialize MongoDB handler: %v", err)
 	}

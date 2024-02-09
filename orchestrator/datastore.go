@@ -19,6 +19,7 @@ type MongoDBHandler struct {
 }
 
 func NewMongoDBHandler(ctx context.Context, uri, dbName, collName string) (*MongoDBHandler, error) {
+	log.Printf("Connecting to database '%s' at %s", dbName, uri)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
