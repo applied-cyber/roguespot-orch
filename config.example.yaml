@@ -1,3 +1,7 @@
+# The user to check for when receiving a request. Default: simple-wd
+user:
+# The password to check for when receiving a request. Default: (Empty password)
+password:
 # The MongoDB host address. Default: localhost
 mongoHost:
 # The MongoDB port. Default: 27017

@@ -9,20 +9,24 @@ import (
 )
 
 type Orchestrator struct {
-	db *DataStore
+	db       *DataStore
+	user     string
+	password string
 }
 
-func NewOrchestrator(ctx context.Context, uri, dbName, collName string) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, uri, dbName, collName, user, password string) (*Orchestrator, error) {
 	db, err := NewDataStore(ctx, uri, dbName, collName)
-	if err != nil {
-		return &Orchestrator{db: db}, err
-	}
-	return &Orchestrator{db: db}, nil
+	orchestrator := &Orchestrator{db: db, user: user, password: password}
+	return orchestrator, err
 }
 
 func (o *Orchestrator) Run() {
+	authAccounts := gin.BasicAuth(gin.Accounts{
+		o.user: o.password,
+	})
+
 	router := gin.Default()
-	router.POST("/log", o.handlePost)
+	router.POST("/log", authAccounts, o.handlePost)
 	if err := router.Run(); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

@@ -10,12 +10,16 @@ import (
 const configFile = "config.yaml" // Default config file name
 
 type Configuration struct {
+	User      string `yaml:"user"`
+	Password  string `yaml:"password"`
 	MongoHost string `yaml:"mongoHost"`
 	MongoPort uint16 `yaml:"mongoPort"` // Only allow 0-65535
 }
 
 func defaultConfig() *Configuration {
 	return &Configuration{
+		User:      "simple-wd",
+		Password:  "",
 		MongoHost: "localhost",
 		MongoPort: 27017,
 	}
