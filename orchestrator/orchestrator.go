@@ -23,6 +23,7 @@ func (o *Orchestrator) Run() {
 	}
 }
 
+// Handle a POST request from the wardriver
 func (o *Orchestrator) handlePost(c *gin.Context) {
 	var accessPoint AP
 	if err := c.BindJSON(&accessPoint); err != nil {
@@ -31,6 +32,7 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 	}
 	ctx := c.Request.Context()
 
+	// Check if we already have an exact same record
 	containsAP, err := o.db.CheckIfAPExists(ctx, accessPoint)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -40,6 +42,7 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"response": "Access point already exists in database"})
 		return
 	}
+	// Insert the access point info into the database
 	err = o.db.InsertAP(ctx, accessPoint)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
