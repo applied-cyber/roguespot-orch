@@ -9,16 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type DataStore interface {
-	CheckIfAPExists(ctx context.Context, ap AP) (bool, error)
-	InsertAP(ctx context.Context, ap AP) error
-}
-
-type MongoDBHandler struct {
+// Implements a data storage mechanism using MongoDB
+type DataStore struct {
 	collection *mongo.Collection
 }
 
-func NewMongoDBHandler(ctx context.Context, uri, dbName, collName string) (*MongoDBHandler, error) {
+func NewDataStore(ctx context.Context, uri, dbName, collName string) (*DataStore, error) {
 	log.Printf("Connecting to database '%s' at %s", dbName, uri)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
@@ -29,11 +25,11 @@ func NewMongoDBHandler(ctx context.Context, uri, dbName, collName string) (*Mong
 		return nil, err
 	}
 	collection := client.Database(dbName).Collection(collName)
-	return &MongoDBHandler{collection: collection}, nil
+	return &DataStore{collection: collection}, nil
 }
 
-func (m *MongoDBHandler) CheckIfAPExists(ctx context.Context, accessPoint AP) (bool, error) {
-	cursor, err := m.collection.Find(ctx, bson.D{{Key: "address", Value: accessPoint.Address}})
+func (ds *DataStore) APExists(ctx context.Context, accessPoint AP) (bool, error) {
+	cursor, err := ds.collection.Find(ctx, bson.D{{Key: "address", Value: accessPoint.Address}})
 	if err != nil {
 		return false, err
 	}
@@ -41,8 +37,8 @@ func (m *MongoDBHandler) CheckIfAPExists(ctx context.Context, accessPoint AP) (b
 	return cursor.Next(ctx), nil
 }
 
-func (m *MongoDBHandler) InsertAP(ctx context.Context, accessPoint AP) error {
-	_, err := m.collection.InsertOne(ctx, accessPoint)
+func (ds *DataStore) InsertAP(ctx context.Context, accessPoint AP) error {
+	_, err := ds.collection.InsertOne(ctx, accessPoint)
 	if err != nil {
 		return err
 	}

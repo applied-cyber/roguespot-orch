@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -8,11 +9,15 @@ import (
 )
 
 type Orchestrator struct {
-	db DataStore
+	db *DataStore
 }
 
-func NewOrchestrator(db DataStore) *Orchestrator {
-	return &Orchestrator{db: db}
+func NewOrchestrator(ctx context.Context, uri, dbName, collName string) (*Orchestrator, error) {
+	db, err := NewDataStore(ctx, uri, dbName, collName)
+	if err != nil {
+		return &Orchestrator{db: db}, err
+	}
+	return &Orchestrator{db: db}, nil
 }
 
 func (o *Orchestrator) Run() {
@@ -31,9 +36,8 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-
 	// Check if we already have an exact same record
-	containsAP, err := o.db.CheckIfAPExists(ctx, accessPoint)
+	containsAP, err := o.db.APExists(ctx, accessPoint)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -49,4 +53,6 @@ func (o *Orchestrator) handlePost(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"response": "Successfully inserted access point"})
+
+	// TODO: publish to topic
 }
