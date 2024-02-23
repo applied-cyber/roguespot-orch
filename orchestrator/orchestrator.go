@@ -21,12 +21,14 @@ func NewOrchestrator(ctx context.Context, uri, dbName, collName, user, password 
 }
 
 func (o *Orchestrator) Run() {
-	authAccounts := gin.BasicAuth(gin.Accounts{
-		o.user: o.password,
-	})
+	/*
+		authAccounts := gin.BasicAuth(gin.Accounts{
+			o.user: o.password,
+		})
+	*/
 
 	router := gin.Default()
-	router.POST("/log", authAccounts, o.handlePost)
+	router.POST("/log" /* authAccounts, */, o.handlePost)
 	if err := router.Run(); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
