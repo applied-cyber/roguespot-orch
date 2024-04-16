@@ -14,6 +14,7 @@ type DataStore struct {
 	collection *mongo.Collection
 }
 
+// Connects to a MongoDB and returns a DataStore
 func NewDataStore(ctx context.Context, uri, dbName, collName string) (*DataStore, error) {
 	log.Printf("Connecting to database '%s' at %s", dbName, uri)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
@@ -28,8 +29,10 @@ func NewDataStore(ctx context.Context, uri, dbName, collName string) (*DataStore
 	return &DataStore{collection: collection}, nil
 }
 
-func (ds *DataStore) APExists(ctx context.Context, accessPoint AP) (bool, error) {
-	cursor, err := ds.collection.Find(ctx, bson.D{{Key: "address", Value: accessPoint.Address}})
+// Checks if a document with the specified key and value exists
+func (ds *DataStore) Exists(ctx context.Context, key string, value interface{}) (bool, error) {
+	filter := bson.D{{Key: key, Value: value}}
+	cursor, err := ds.collection.Find(ctx, filter)
 	if err != nil {
 		return false, err
 	}
@@ -37,8 +40,9 @@ func (ds *DataStore) APExists(ctx context.Context, accessPoint AP) (bool, error)
 	return cursor.Next(ctx), nil
 }
 
-func (ds *DataStore) InsertAP(ctx context.Context, accessPoint AP) error {
-	_, err := ds.collection.InsertOne(ctx, accessPoint)
+// Inserts a new document into the collection
+func (ds *DataStore) Insert(ctx context.Context, document interface{}) error {
+	_, err := ds.collection.InsertOne(ctx, document)
 	if err != nil {
 		return err
 	}
