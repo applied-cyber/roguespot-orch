@@ -1,2 +1,10 @@
 # roguespot-orch
-The central server and data processing unit in a system to identify rogue access points
+The central server for receiving and analyzing information about access
+points from the Roguespot wardrivers. It currently flags access points that
+are seen for the first time or whose vendor is neither Cisco/Juniper (based on
+the BSSID).
+
+```bash
+$ make
+$ ./roguespot-orch
+```
