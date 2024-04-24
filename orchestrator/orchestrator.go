@@ -9,9 +9,9 @@ import (
 )
 
 type AP struct {
-	Address  string `json:"address"`
-	SSID     string `json:"ssid"`
-	Security string `json:"security"`
+	Address  string  `json:"address"`
+	SSID     string  `json:"ssid"`
+	Strength float64 `json:"strength"`
 }
 
 type Orchestrator struct {
@@ -44,27 +44,45 @@ func (o *Orchestrator) Run() {
 
 // Handles requests from the wardrivers
 func (o *Orchestrator) handlePost(c *gin.Context) {
-	var accessPoint AP
-	if err := c.BindJSON(&accessPoint); err != nil {
+	var accessPoints []AP
+	if err := c.BindJSON(&accessPoints); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	for _, accessPoint := range accessPoints {
+		err := o.handleAccessPoint(accessPoint, c)
+		// TODO: Continue on error, and send back which access points had an error
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"response": "Access points handled correctly"})
+}
+
+func (o *Orchestrator) handleAccessPoint(accessPoint AP, c *gin.Context) error {
+	log.Printf("Handling access point: %+v", accessPoint)
 	ctx := c.Request.Context()
+
 	// Check if the access point already exists
 	exists, err := o.db.Exists(ctx, "address", accessPoint.Address)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		log.Printf("Error while checking if access point exists in database: %s", err)
+		return err
 	}
+
 	if exists {
-		c.JSON(http.StatusOK, gin.H{"response": "Access point already exists in database"})
-		return
+		log.Printf("Access point already exists in database. Skipping insert")
+		return nil
 	}
+
 	// Insert the access point into the database
 	err = o.db.Insert(ctx, accessPoint)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		log.Printf("Error while inserting access point into database: %s", err)
+		return err
 	}
-	c.JSON(http.StatusCreated, gin.H{"response": "Successfully inserted access point"})
+
+	return nil
 }
