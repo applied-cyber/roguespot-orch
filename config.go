@@ -10,18 +10,22 @@ import (
 const configFile = "config.yaml" // Default config file name
 
 type Configuration struct {
-	User      string `yaml:"user"`
-	Password  string `yaml:"password"`
-	MongoHost string `yaml:"mongoHost"`
-	MongoPort uint16 `yaml:"mongoPort"` // Only allow 0-65535
+	User        string `yaml:"user"`
+	Password    string `yaml:"password"`
+	MongoHost   string `yaml:"mongoHost"`
+	MongoPort   uint16 `yaml:"mongoPort"` // Only allow 0-65535
+	SlackToken  string `yaml:"slackToken"`
+	SlackChanID string `yaml:"slackChanID"`
 }
 
 func defaultConfig() *Configuration {
 	return &Configuration{
-		User:      "simple-wd",
-		Password:  "",
-		MongoHost: "localhost",
-		MongoPort: 27017,
+		User:        "simple-wd",
+		Password:    "",
+		MongoHost:   "localhost",
+		MongoPort:   27017,
+		SlackToken:  "",
+		SlackChanID: "",
 	}
 }
 

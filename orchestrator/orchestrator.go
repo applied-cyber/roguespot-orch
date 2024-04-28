@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
+
+	"roguespot-orch/alert"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,17 +19,21 @@ type AP struct {
 
 type Orchestrator struct {
 	db       *DataStore
+	alerts   *alert.AlertSys
 	user     string
 	password string
 }
 
 // Creates a new Orchestrator instance
-func NewOrchestrator(ctx context.Context, uri, user, password string) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, uri, user, password string,
+	alerts *alert.AlertSys) (*Orchestrator, error) {
 	db, err := NewDataStore(ctx, uri, "roguespot-orch", "post-requests")
 	if err != nil {
 		return nil, err
 	}
-	return &Orchestrator{db: db, user: user, password: password}, nil
+	return &Orchestrator{db: db,
+		user: user, password: password,
+		alerts: alerts}, nil
 }
 
 // Runs the orchestrator server
@@ -37,6 +44,7 @@ func (o *Orchestrator) Run() {
 
 	router := gin.Default()
 	router.POST("/log", authAccounts, o.handlePost)
+	o.alerts.Notify("Started orchestrator at " + time.Now().String())
 	if err := router.Run(); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
@@ -83,6 +91,8 @@ func (o *Orchestrator) handleAccessPoint(accessPoint AP, c *gin.Context) error {
 		log.Printf("Error while inserting access point into database: %s", err)
 		return err
 	}
+
+	o.alerts.Notify("New access point detected: " + accessPoint.SSID + ", " + accessPoint.Address)
 
 	return nil
 }
